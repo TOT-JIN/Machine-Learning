@@ -16,15 +16,15 @@ def classify(normData, dataSet, labels, k):
     diffMat = np.tile(normData, (dataSetSize, 1)) - dataSet
     sqDiffMat = diffMat ** 2
     sqDistances = sqDiffMat.sum(axis=1)
-    distance = sqDistances ** 0.5
-    sortedDistIndicies = distance.argsort()
+    distance = sqDistances ** 0.5  # 得到欧氏距离 m*1 矩阵
+    sortedDistIndicies = distance.argsort() #返回距离从小到大的索引值，为了下一步取距离最近的样本的真实好感度
     #     classCount保存的K是魅力类型   V:在K个近邻中某一个类型的次数
     classCount = {}
     for i in range(k):
         voteLabel = labels[sortedDistIndicies[i]]
-        classCount[voteLabel] = classCount.get(voteLabel, 0) + 1
-    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True)
-    return sortedClassCount[0][0]
+        classCount[voteLabel] = classCount.get(voteLabel, 0) + 1  # 记录该好感度次数+1
+    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True) #取值（次数）进行降序排序
+    return sortedClassCount[0][0] # 返回在该测试样本的k范围内，出现次数最多的好感度
 
 
 def file2matrix(filename):
@@ -32,7 +32,7 @@ def file2matrix(filename):
     #     readlines:是一次性将这个文本的内容全部加载到内存中(列表)
     arrayOflines = fr.readlines()
     numOfLines = len(arrayOflines)
-    returnMat = np.zeros((numOfLines, 3))
+    returnMat = np.zeros((numOfLines, 3))  #返回来一个长宽为numOfLines和3的用0填充的二维数组
     classLabelVector = []
     index = 0
     for line in arrayOflines:
@@ -40,10 +40,10 @@ def file2matrix(filename):
         print(line.split('\t'))
         listFromline = list(map(float, line.split('\t')))
 
-        returnMat[index, :] = listFromline[0:3]
-        classLabelVector.append(int(listFromline[-1]))
+        returnMat[index, :] = listFromline[0:3]  #收集数据集到returnMat中对应的一维数组里
+        classLabelVector.append(int(listFromline[-1]))  #同时在classLabelVector中对应索引的位置记录好感度
         index += 1
-    return returnMat, classLabelVector
+    return returnMat, classLabelVector   #返回一对数据集和好感度（label）为zip状态的数组
 
 
 '''
@@ -58,19 +58,19 @@ def file2matrix(filename):
 
 def autoNorm(dataSet):
     #     dataSet.min(0)   代表的是统计这个矩阵中每一列的最小值     返回值是一个矩阵1*3矩阵
-    minVals = dataSet.min(0)
-    maxVals = dataSet.max(0)
-    ranges = maxVals - minVals
-    m = dataSet.shape[0]
+    minVals = dataSet.min(0)   # 收录每一列最小值的1*3矩阵
+    maxVals = dataSet.max(0)   # 收录每一列最大值的1*3矩阵
+    ranges = maxVals - minVals # 收录每一列振幅的1*3矩阵
+    m = dataSet.shape[0]  #返回numOfLines
     #     normDataSet存储归一化后的数据
     normDataSet = np.zeros(np.shape(dataSet))
-    normDataSet = dataSet - np.tile(minVals, (m, 1))
-    normDataSet = normDataSet / np.tile(ranges, (m, 1))
+    normDataSet = dataSet - np.tile(minVals, (m, 1))  # 以minVals为原本，纵向复制m次生成m*3矩阵，为减数。和被减数计算后得到收录每一元素的相对最小值高度的m*3矩阵
+    normDataSet = normDataSet / np.tile(ranges, (m, 1)) # 得到m*3矩阵，每个元素值为该列的振幅，作为除数。和被除数计算后得到每一个元素相对最小值高度占振幅百分比的m*3矩阵
     return normDataSet, ranges, minVals
 
 def datingClassTest():
     hoRatio = 0.1
-    datingDataMat, datingLabels = file2matrix('../../../data/datingTestSet2.txt')
+    datingDataMat, datingLabels = file2matrix('../data/datingTestSet2.txt') #得到一对数据集和好感度（label）为zip状态的数组
 
     # 归一化
     normMat, ranges, minVals = autoNorm(datingDataMat)
@@ -86,7 +86,7 @@ def datingClassTest():
               % (classifierResult, datingLabels[i]))
         if (classifierResult != datingLabels[i]):
             errorCount += 1.0
-    errorRate = errorCount / float(numTestVecs)
+    errorRate = errorCount / float(numTestVecs) # 得到错误率
     print('正确率 : %f' % (1 - errorRate))
     return 1 - errorRate
 
@@ -97,7 +97,7 @@ def datingClassTest():
 
 
 def createScatterDiagram():
-    datingDataMat, datingLabels = file2matrix('../../../data/datingTestSet2.txt')
+    datingDataMat, datingLabels = file2matrix('../data/datingTestSet2.txt')
     type1_x = []
     type1_y = []
     type2_x = []
@@ -134,7 +134,7 @@ def createScatterDiagram():
 def classifyperson():
     resultList = ['没感觉', '看起来还行', '极具魅力']
     input_man = [50000, 8, 9.5]
-    datingDataMat, datingLabels = file2matrix('../../../data/datingTestSet2.txt')
+    datingDataMat, datingLabels = file2matrix('../data/datingTestSet2.txt')
     normMat, ranges, minVals = autoNorm(datingDataMat)
     result = classify((input_man - minVals) / ranges, normMat, datingLabels, 10)
     print('你即将约会的人是:', resultList[result - 1])
@@ -146,3 +146,4 @@ if __name__ == '__main__':
     acc = datingClassTest()
     if (acc > 0.9):
         classifyperson()
+    createScatterDiagram()
