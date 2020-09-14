@@ -23,7 +23,7 @@ def classify(normData, dataSet, labels, k):
     for i in range(k):
         voteLabel = labels[sortedDistIndicies[i]]
         classCount[voteLabel] = classCount.get(voteLabel, 0) + 1  # 记录该好感度次数+1
-    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True) #取值（次数）进行降序排序
+    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True) #key定义: 根据value值（次数）进行 降序排序
     return sortedClassCount[0][0] # 返回在该测试样本的k范围内，出现次数最多的好感度
 
 
