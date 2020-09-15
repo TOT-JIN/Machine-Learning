@@ -5,7 +5,7 @@ Created on 2020年1月11日
 '''
 
 import os
-from com.msb.knn.KNNDateOnHand import *
+from KNNDateOnHand import *
 
 # 将每一个文件的内容拼接成一行
 def img2vector(filename):
@@ -22,7 +22,7 @@ def IdentifImgClassTest():
     # 分类号（数字）
     hwLabels = []
     # 获取TrainData目录下所有的文件
-    trainingFileList = os.listdir('../../../data/TrainData')
+    trainingFileList = os.listdir('../data/TrainData')
     # 训练集的数据量，空间中分布的数据量  m=1934
     m = len(trainingFileList)
     # 1934*1024的零矩阵
@@ -31,17 +31,17 @@ def IdentifImgClassTest():
         fileNameStr = trainingFileList[i]
         fileStr = fileNameStr.split('.')[0]
         classNumStr = int(fileStr.split('_')[0])
-        hwLabels.append(classNumStr)
-        trainingMat[i, :] = img2vector('../../../data/TrainData/%s' % fileNameStr)
+        hwLabels.append(classNumStr)   # 提取真实结果作为分类存入hwLabels列表
+        trainingMat[i, :] = img2vector('../data/TrainData/%s' % fileNameStr)
 
-    testFileList = os.listdir('../../../data/TestData')
+    testFileList = os.listdir('../data/TestData')
     errorCount = 0.0
     mTest = len(testFileList)
     for i in range(mTest):
         fileNameStr = testFileList[i]
         fileStr = fileNameStr.split('.')[0]
         classNumStr = int(fileStr.split('_')[0])
-        vectorUnderTest = img2vector('../../../data/TestData/%s' % fileNameStr)
+        vectorUnderTest = img2vector('../data/TestData/%s' % fileNameStr)
         # 将训练集数据和第一条测试数据 以及K值传递给classify这个方法
         classifierResult = classify(vectorUnderTest, trainingMat, hwLabels, 3)
         print("识别出的数字是: %d, 真实数字是: %d" % (classifierResult, classNumStr))
