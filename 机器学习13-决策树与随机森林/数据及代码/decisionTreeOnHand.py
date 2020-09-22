@@ -15,9 +15,11 @@ class DecisionTree(object):
 
 #   计算概率
     def _getDistribution(self,dataArray):
+        # defaultdict的作用是在于，当字典里的key不存在但被查找时，返回的不是keyError而是一个默认值，此处返回float类型的0
         # dict  map
         distribution = defaultdict(float)
         m, n = np.shape(dataArray)
+        # 累加每一个分类的概率
         for line in dataArray:
             print(line[-1])
             distribution[line[-1]] += 1.0/m
@@ -29,6 +31,7 @@ class DecisionTree(object):
         ent = 0.0
         distribution=self._getDistribution(dataArray)
 
+        # H(x) = - sigma p * log p
         for key, prob in distribution.items():
             ent -= prob * mt.log(prob, 2)
         return ent
@@ -38,22 +41,27 @@ class DecisionTree(object):
         m, n = np.shape(dataArray)
         # 条件熵
         condEnt = 0.0
+        # 获得第 colInx 列的去重值
         uniqueValues = np.unique(dataArray[:, colIdx])
+        # 求 colInx 列每个值的前提下的熵值
         for oneValue in uniqueValues:
+            # 获得某一个值（前提）下的数据
             oneData = dataArray[dataArray[:, colIdx] == oneValue]
-            # 信息熵
+            # 求出当前前提(中间节点)下信息熵
             oneEnt = self._entropy(oneData)
-            # 第一列值为teenager的概率
+            # 满足当前前提(已知条件)的概率
             prob = float(np.shape(oneData)[0]) / m
             # 概率*信息熵
             condEnt += prob * oneEnt
         return condEnt
 
     def _infoGain(self, dataArray, colIdx, baseEnt):
+        # 计算第 colIdx 列的条件熵
         condEnt = self._conditionEntropy(dataArray, colIdx)
         # 信息增益
         return baseEnt-condEnt
 
+    # 求出信息增益最大的一列
     def _chooseBestProp(self,dataArray):
         m, n = np.shape(dataArray)
         bestProp = -1
@@ -62,7 +70,7 @@ class DecisionTree(object):
         baseEnt = self._entropy(dataArray)
         # [0-4)
         for i in range(n-1):
-            # 计算已知第一列数据的信息熵  条件熵
+            # 计算已知条件的信息增益
             infoGain=self._infoGain(dataArray, i, baseEnt)
             if infoGain > bestInfoGain:
                 bestProp=i
@@ -72,11 +80,12 @@ class DecisionTree(object):
     def _splitData(self,dataArray,colIdx,splitValue):
         m, n = np.shape(dataArray)
 
+        # 返回类型 array([ True,  True,  True, False,  True])
         cols = np.array(range(n)) != colIdx
         rows = (dataArray[:, colIdx] == splitValue)
         print(rows)
 
-        # data=dataArray[rows,:][:,cols]
+        # data=dataArray[rows,:][:,cols]  得到该spliValue分支下的子树冠
         #ix_  取rows中指定的行，取cols中指定的列   花式索引
         data = dataArray[np.ix_(rows, cols)]
         return data
@@ -84,8 +93,11 @@ class DecisionTree(object):
     def createTree(self, dataArray):
         # 获取集合形状 (m,n)
         m, n = np.shape(dataArray)
+        # 对于一维数组或者列表，unique函数去除其中重复的元素，并按元素由大到小返回一个新的无元素重复的元组或者列表
+        # 此处判断分类结果是否单一，如若单一，说明此模型为单叶节点，直接返回结果
         if len(np.unique(dataArray[:, -1])) == 1:
             return (dataArray[0, -1], 1.0)
+        # 此处判断数据集矩阵是否为2列，如果为真，则对结果分类的影响只有一列（因素），模型只有根节点，不构成树，则直接返回概率较大的叶节点即可
         if n == 2:
             distribution = self._getDistribution(dataArray)
             sortProb = sorted(distribution.items(), key=lambda x: x[1], reverse=True)
